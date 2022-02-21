@@ -3,20 +3,33 @@ import { useRouter } from "next/router";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
+import Image from "next/image";
+import { FaImage } from "react-icons/fa";
+import moment from "moment";
 import Layout from "@/components/Layout";
+import Modal from "@/components/Modal";
+import ImageUpload from "@/components/ImageUpload";
 import { API_URL } from "@/config/index";
 import styles from "@/styles/form.module.css";
 
-const AddEventPage = () => {
+const EditEventPage = ({ evt }: any) => {
   const [values, setValues] = useState({
-    name: "",
-    performers: "",
-    venue: "",
-    address: "",
-    date: "",
-    time: "",
-    description: "",
+    name: evt.attributes.name,
+    performers: evt.attributes.performers,
+    venue: evt.attributes.venue,
+    address: evt.attributes.address,
+    date: evt.attributes.date,
+    time: evt.attributes.time,
+    description: evt.attributes.description,
   });
+
+  const [imagePreview, setImagePreview] = useState(
+    evt.attributes.image.data
+      ? evt.attributes.image.data.attributes.formats.thumbnail.url
+      : null
+  );
+
+  const [showModal, setShowModal] = useState(false);
 
   const router = useRouter();
 
@@ -32,11 +45,11 @@ const AddEventPage = () => {
     }
 
     const input = {
-      data: values
-    }
+      data: values,
+    };
 
-    const res = await fetch(`${API_URL}/api/events`, {
-      method: "POST",
+    const res = await fetch(`${API_URL}/api/events/${evt.id}`, {
+      method: "PUT",
       mode: "cors",
       headers: {
         "Content-Type": "application/json",
@@ -49,8 +62,8 @@ const AddEventPage = () => {
     if (!res.ok) {
       toast.error("Something went wrong :(");
     } else {
-      const {data: evt} = await res.json();
-      console.log(evt)
+      const { data: evt } = await res.json();
+      console.log(evt);
       router.push(`/events/${evt.attributes.slug}`);
     }
   };
@@ -60,12 +73,20 @@ const AddEventPage = () => {
     setValues({ ...values, [name]: value });
   };
 
+  const imageUploaded = async (e: any) => {
+    const res = await fetch(`${API_URL}/api/events/${evt.id}?populate=*`)
+    const { data } = await res.json()
+    console.log(data)
+    setImagePreview(data.attributes.image.data.attributes.formats.thumbnail.url)
+    setShowModal(false)
+  };
+
   return (
     <Layout title="Add New Event">
       <Link href="/events">
         <a>Go Back</a>
       </Link>
-      <h2>Add Event</h2>
+      <h2>Edit Event</h2>
       <ToastContainer />
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.grid}>
@@ -119,7 +140,7 @@ const AddEventPage = () => {
               type="date"
               id="date"
               name="date"
-              value={values.date}
+              value={moment(values.date).format("yyyy-MM-DD")}
               onChange={handleInputChange}
             />
           </div>
@@ -146,10 +167,43 @@ const AddEventPage = () => {
           />
         </div>
 
-        <input type="submit" value="Add Event" className="btn" />
+        <input type="submit" value="Update Event" className="btn" />
       </form>
+
+      <h2>Event Image</h2>
+      {imagePreview ? (
+        <Image src={imagePreview} height={100} width={170} />
+      ) : (
+        <div>
+          <p>No Image Uploaded</p>
+        </div>
+      )}
+
+      <div>
+        <button className="btn-secondary" onClick={() => setShowModal(true)}>
+          <FaImage /> Set Image
+        </button>
+      </div>
+
+      <Modal show={showModal} onClose={() => setShowModal(false)} title="">
+        <ImageUpload evtId={evt.id} imageUploaded={imageUploaded} />
+      </Modal>
     </Layout>
   );
 };
 
-export default AddEventPage;
+export async function getServerSideProps({ params: { id }, req }: any) {
+  const res = await fetch(`${API_URL}/api/events/${id}?populate=*`);
+  const { data: evt } = await res.json();
+
+  console.log('Hello')
+  console.log(req.headers.cookie)
+
+  return {
+    props: {
+      evt,
+    },
+  };
+}
+
+export default EditEventPage;
