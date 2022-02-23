@@ -6,7 +6,7 @@ const Search = () => {
   const [term, setTerm] = useState("");
   const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault();
     router.push(`/events/search?term=${term}`);
   };

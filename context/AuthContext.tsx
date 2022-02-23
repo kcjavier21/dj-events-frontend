@@ -2,15 +2,39 @@ import { createContext, useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { NEXT_URL } from "@/config/index";
 
-const AuthContext = createContext(null);
+const AuthContext = createContext<any | null>(null);
 
-const AuthProvider = ({ children }: any) => {
-  const [user, setUser] = useState(null);
-  const [error, setError] = useState(null);
+interface IUser {
+  blocked?: boolean;
+  confirmed?: boolean;
+  createdAt?: string;
+  email?: string;
+  id?: number;
+  provider?: string;
+  updatedAt?: string;
+  username?: string;
+}
+
+const AuthProvider = ({ children }: any | null) => {
+  const [user, setUser] = useState<IUser | null>(null);
+  const [error, setError] = useState<any | null>(null);
 
   const router = useRouter();
 
-  useEffect(() => checkUserLoggedIn(), []);
+  useEffect(() => checkUserLoggedIn());
+
+  const checkUserLoggedIn: any = async () => {
+    const res = await fetch(`${NEXT_URL}/api/user`);
+    const data = await res.json();
+
+    if (res.ok) {
+      setUser(data.user);
+    } else {
+      setUser(null);
+    }
+
+    return data.user;
+  };
 
   const register = async (user: any) => {
     const res = await fetch(`${NEXT_URL}/api/register`, {
@@ -50,6 +74,7 @@ const AuthProvider = ({ children }: any) => {
 
     if (res.ok) {
       setUser(data.user);
+      console.log(data.user);
       router.push("/account/dashboard");
     } else {
       setError(data.message);
@@ -68,16 +93,7 @@ const AuthProvider = ({ children }: any) => {
     }
   };
 
-  const checkUserLoggedIn = async (user: any) => {
-    const res = await fetch(`${NEXT_URL}/api/user`);
-    const data = await res.json();
-
-    if (res.ok) {
-      setUser(data.user);
-    } else {
-      setUser(null);
-    }
-  };
+  
 
   return (
     <AuthContext.Provider value={{ user, error, register, login, logout }}>

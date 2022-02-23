@@ -23,8 +23,6 @@ const EventsPage = ({ events, page, total }: any) => {
 };
 
 export async function getServerSideProps({ query: { page = 1 } }: any) {
-  console.log("hello");
-
   const qs = require("qs");
   const qr = qs.stringify(
     {

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { API_URL } from "@/config/index";
 import styles from "@/styles/form.module.css";
 
-const ImageUpload = ({ evtId, imageUploaded }: any) => {
-  const [image, setImage] = useState(null);
+const ImageUpload = ({ evtId, imageUploaded, token }: any) => {
+  const [image, setImage] = useState<any | null>(null);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -15,11 +15,14 @@ const ImageUpload = ({ evtId, imageUploaded }: any) => {
     formData.append("refId", evtId);
     formData.append("field", "image");
 
-    console.log(formData.get('field'));
+    console.log(formData.get("field"));
 
     const res = await fetch(`${API_URL}/api/upload`, {
       method: "POST",
       body: formData,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (res.ok) {

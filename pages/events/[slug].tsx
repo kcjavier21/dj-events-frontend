@@ -1,49 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/router";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Layout from "@/components/Layout";
-import { FaPencilAlt, FaTimes } from "react-icons/fa";
 import { API_URL } from "@/config/index";
 import styles from "@/styles/event.module.css";
 
 const EventPage = ({ evt }: any) => {
-  const router = useRouter();
-
-  const deleteEvent = async (e: any) => {
-    if (confirm("Are you sure?")) {
-      const res = await fetch(`${API_URL}/api/events/${evt.id}`, {
-        method: "DELETE",
-        mode: "cors",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.message);
-      } else {
-        router.push("/events");
-      }
-    }
-  };
-
-  console.log(evt);
-
   return (
     <Layout>
       <div className={styles.event}>
-        <div className={styles.controls}>
-          <Link href={`/events/edit/${evt.id}`}>
-            <a>
-              <FaPencilAlt /> Edit Event
-            </a>
-          </Link>
-          <a href="#" className={styles.delete} onClick={deleteEvent}>
-            <FaTimes /> Delete Event
-          </a>
-        </div>
-
         <span>
           {new Date(evt.attributes.date).toLocaleDateString("en-US")} at{" "}
           {evt.attributes.time}
@@ -80,27 +46,7 @@ const EventPage = ({ evt }: any) => {
   );
 };
 
-export async function getStaticPaths() {
-  const res = await fetch(`${API_URL}/api/events?populate=*`);
-  const { data: events } = await res.json();
-
-  const paths = events.map((evt: any) => ({
-    params: {
-      slug: evt.attributes.slug,
-    },
-  }));
-
-  return {
-    paths,
-    fallback: true,
-  };
-}
-
-export async function getStaticProps({
-  params: { slug },
-}: {
-  params: { slug: string };
-}) {
+export async function getServerSideProps({ params: { slug }, req }: any) {
   const res = await fetch(
     `${API_URL}/api/events?filters[slug]=${slug}&populate=*`
   );

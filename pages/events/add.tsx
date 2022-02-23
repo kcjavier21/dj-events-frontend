@@ -6,8 +6,9 @@ import Link from "next/link";
 import Layout from "@/components/Layout";
 import { API_URL } from "@/config/index";
 import styles from "@/styles/form.module.css";
+import { parseCookies } from "@/helpers/index";
 
-const AddEventPage = () => {
+const AddEventPage = ({ token } : any) => {
   const [values, setValues] = useState({
     name: "",
     performers: "",
@@ -17,6 +18,8 @@ const AddEventPage = () => {
     time: "",
     description: "",
   });
+
+  console.log(token);
 
   const router = useRouter();
 
@@ -40,18 +43,19 @@ const AddEventPage = () => {
       mode: "cors",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` 
       },
       body: JSON.stringify(input),
     });
 
-    console.log(input);
+    console.log(res);
 
     if (!res.ok) {
       toast.error("Something went wrong :(");
     } else {
-      const {data: evt} = await res.json();
+      const evt = await res.json();
       console.log(evt)
-      router.push(`/events/${evt.attributes.slug}`);
+      router.push(`/events/${evt.slug}`);
     }
   };
 
@@ -151,5 +155,15 @@ const AddEventPage = () => {
     </Layout>
   );
 };
+
+
+export async function getServerSideProps({ req }: any) {
+  const { token } = parseCookies(req);
+
+  return {
+    props: { token },
+  };
+}
+
 
 export default AddEventPage;

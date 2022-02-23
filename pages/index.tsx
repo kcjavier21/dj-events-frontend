@@ -14,10 +14,12 @@ const Home: NextPage = ({ events }: any) => {
         <EventItem key={evt.attributes.id} evt={evt} />
       ))}
 
-      {events.length > 0 && (
+      {events.length > 0 ? (
         <Link href="/events">
           <a className="btn-secondary">View All Events</a>
         </Link>
+      ) : (
+        <></>
       )}
     </Layout>
   );

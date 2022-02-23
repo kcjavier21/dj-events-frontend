@@ -11,8 +11,9 @@ import Modal from "@/components/Modal";
 import ImageUpload from "@/components/ImageUpload";
 import { API_URL } from "@/config/index";
 import styles from "@/styles/form.module.css";
+import { parseCookies } from "@/helpers/index";
 
-const EditEventPage = ({ evt }: any) => {
+const EditEventPage = ({ evt, token }: any) => {
   const [values, setValues] = useState({
     name: evt.attributes.name,
     performers: evt.attributes.performers,
@@ -53,6 +54,7 @@ const EditEventPage = ({ evt }: any) => {
       mode: "cors",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(input),
     });
@@ -60,11 +62,14 @@ const EditEventPage = ({ evt }: any) => {
     console.log(input);
 
     if (!res.ok) {
+      if (res.status === 401) {
+        toast.error("You are not allowed to update this event!");
+        return;
+      }
       toast.error("Something went wrong :(");
     } else {
-      const { data: evt } = await res.json();
-      console.log(evt);
-      router.push(`/events/${evt.attributes.slug}`);
+      const evt = await res.json();
+      router.push(`/events/${evt.slug}`);
     }
   };
 
@@ -74,11 +79,13 @@ const EditEventPage = ({ evt }: any) => {
   };
 
   const imageUploaded = async (e: any) => {
-    const res = await fetch(`${API_URL}/api/events/${evt.id}?populate=*`)
-    const { data } = await res.json()
-    console.log(data)
-    setImagePreview(data.attributes.image.data.attributes.formats.thumbnail.url)
-    setShowModal(false)
+    const res = await fetch(`${API_URL}/api/events/${evt.id}?populate=*`);
+    const { data } = await res.json();
+    console.log(data);
+    setImagePreview(
+      data.attributes.image.data.attributes.formats.thumbnail.url
+    );
+    setShowModal(false);
   };
 
   return (
@@ -186,7 +193,7 @@ const EditEventPage = ({ evt }: any) => {
       </div>
 
       <Modal show={showModal} onClose={() => setShowModal(false)} title="">
-        <ImageUpload evtId={evt.id} imageUploaded={imageUploaded} />
+        <ImageUpload evtId={evt.id} imageUploaded={imageUploaded} token={token} />
       </Modal>
     </Layout>
   );
@@ -195,13 +202,15 @@ const EditEventPage = ({ evt }: any) => {
 export async function getServerSideProps({ params: { id }, req }: any) {
   const res = await fetch(`${API_URL}/api/events/${id}?populate=*`);
   const { data: evt } = await res.json();
+  const { token } = parseCookies(req);
 
-  console.log('Hello')
-  console.log(req.headers.cookie)
+  console.log("Hello");
+  console.log(req.headers.cookie);
 
   return {
     props: {
       evt,
+      token,
     },
   };
 }

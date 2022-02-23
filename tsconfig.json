@@ -11,6 +11,7 @@
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "node",
+    "noImplicitAny": false,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -19,7 +20,8 @@
       "@/components/*": ["components/*"],
       "@/styles/*": ["styles/*"],
       "@/config/*": ["config/*"],
-      "@/context/*": ["context/*"]
+      "@/context/*": ["context/*"],
+      "@/helpers/*": ["helpers/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
